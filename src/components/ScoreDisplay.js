@@ -15,7 +15,7 @@ export default function ScoreDisplay(props) {
             <div id = "score-display" className = "score-display">
                 <div className = "arrow-value-container span-six">
                     {props.appState.map(end => {
-                        return <EndItem key = {uuidv4()} arrowValues = {end.endValues} />
+                        return <EndItem key = {uuidv4()} displayText = {end.displayText} />
                     })}
                 </div>
                 <div className = "end-score-container span-two">

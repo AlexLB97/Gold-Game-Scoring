@@ -1,12 +1,28 @@
-import React, {useState} from 'react';
+import React, {useState,useEffect} from 'react';
 import './App.css';
 import ValueButtons from './components/ValueButtons';
 import ScoreDisplay from './components/ScoreDisplay';
+import SelectLevel from './components/SelectLevel';
+import LevelRules from './components/LevelRules';
+import SetGoal from './components/SetGoal';
+import Popup from './components/Popup';
+
 
 
 function App() {
-  //Initial state. Later will incorporate a button in UI for changing level
-  const [level, setLevel] = useState('expert')
+  //Initial states and globals. Later will incorporate a button in UI for changing level
+  const [completed, setCompleted] = useState(false)
+  const [goal, setGoal] = useState(0)
+  const[rules, setRules] = useState(
+    [
+      {
+        neutral: 0,
+        addOne: 0,
+        subOne: 0
+      }
+    ]
+  )
+  const [level, setLevel] = useState('')
   const [appState, setAppState] = useState(
     [
       {
@@ -16,95 +32,211 @@ function App() {
         totalScore: 0
       }
     ]);
+    let newState = []
+    const xArray = []
+    const mArray = []
   
+  //Functions related to scoring
+  //--------------------------------------------------------------------------------------
+  
+
+useEffect(() => {
+  const storedGoal = localStorage.getItem('goal')
+  const storedState = JSON.parse(localStorage.getItem('appState'))
+  const storedLevel = localStorage.getItem('level');
+  const storedCompleted = JSON.parse(localStorage.getItem('completed'))
+
+  const newCompleted = storedCompleted ? storedCompleted : completed;
+  setCompleted(newCompleted)
+  
+  const newLevel = storedLevel ? storedLevel : 'Advanced';
+  setLevel(newLevel);
+
+  const newState = storedState ? storedState : appState;
+  setAppState(newState)
+
+  const newGoal = storedGoal ? storedGoal : 0
+  setGoal(Number(newGoal))
+}, [])
+
+
+useEffect(() => {
+  let options = document.getElementsByName('level') 
+  for (var i=0; i<options.length; i++) {
+    if(options[i].value === level) {
+        options[i].checked = "checked"
+    } else {
+      continue
+    }
+  newRules(level)
+  
+  }
+}, [level]);
+
+useEffect(() => {
+  const clearButton = document.getElementById('CLEAR')
+  const nextButton = document.getElementById('NEXT')
+  const changeButton = document.getElementById('changeLevel')
+  const lastButton = document.getElementById('last')
+  const resetButton = document.getElementById('reset')
+  if (goal === 0) {
+    clearButton.disabled = true;
+    nextButton.disabled = true;
+    resetButton.disabled = true;
+    lastButton.disabled = true;
+  } else {
+    if (appState[appState.length-1].endValues.length === 0) {
+      clearButton.disabled = true;
+    } else {
+      clearButton.disabled = false;
+    }
+    if (appState[appState.length-1].endValues.length === 6) {
+      nextButton.disabled = false
+    } else {
+      nextButton.disabled = true;
+    }
+    if (appState[appState.length-1].endValues.length === 0) {
+      changeButton.disabled = false;
+    } else {
+      changeButton.disabled = true;
+    }
+    if (appState.length > 1) {
+      lastButton.disabled = false;
+    } else {
+      lastButton.disabled = true;
+    }
+    if (appState.length === 1 && appState[0].endValues.length === 0 && localStorage.length === 0) {
+      resetButton.disabled = true;
+    } else {
+      resetButton.disabled = false;
+    }
+    if (appState[appState.length-1].totalScore === goal && goal !== 0 && completed === false) {
+      const popup = document.getElementById('popup')
+      popup.style.display = 'flex'
+      setCompleted(true)
+      localStorage.setItem('completed', true)
+    } else {
+      return
+    }
+  }
+}, [appState, goal, completed])
+
+useEffect (() => {
+  const goalButton = document.getElementsByClassName('goal-button')
+  if (goal !== 0) {
+    goalButton[0].disabled = true;
+  } else {
+    goalButton[0].disabled = false;
+  }
+}, [goal])
+
+
+
+
+  //Keeps the score list scrolled to the current end
   function updateScroll () {
     const element = document.getElementById('score-display');
     element.scrollTop = (element.scrollHeight);
   }
 
-    //Initialize newState
-  let newState = []
+  function sortDisplayText() {
+    for (var i = 0; i< appState[appState.length-1].displayText.length; i++) {
+      if (appState[appState.length-1].displayText[i] === 'X') {
+        appState[appState.length-1].displayText.splice(i,1)
+        xArray.push('X')
+        i--
+      } else if (appState[appState.length-1].displayText[i] === 'M') {
+        appState[appState.length-1].displayText.splice(i,1)
+        i--
+        mArray.push('M')
+      } else {
+        continue
+      }
+    }
+    appState[appState.length-1].displayText.sort((a,b) => parseInt(b)-parseInt(a))
+    appState[appState.length-1].displayText = xArray.concat(appState[appState.length-1].displayText, mArray)
+  }
 
+  //Decrements both total score and end score
   function decrementScore () {
     newState[newState.length-1].endScore--
     newState[newState.length-1].totalScore--
   }
 
+  //Increments total score and end score
   function incrementScore() {
     newState[newState.length-1].endScore++
     newState[newState.length-1].totalScore++
+  } 
+
+  //Function to change increment and decrement end score and total score based on either a value input or a value deleted. 
+  function handleScoreChange (level, value, opt1, opt2) {
+    switch (level) {
+      case 'Beginner':
+        if (value > 6) {
+          opt1()
+        } else if (value === 6) {
+          break
+        } else if (value < 6) {
+          opt2()
+        }
+        break;
+      case 'Intermediate':
+        if (value > 7) {
+          opt1()
+        } else if (value === 7) {
+          break
+        } else if (value < 7) {
+          opt2()
+        }
+        break;
+      case 'Advanced':
+        if (value > 8) {
+          opt1()
+        } else if (value === 8) {
+          break
+        } else if (value < 8) {
+          opt2()
+        }
+        break;
+      case 'Elite':
+        if (value > 9) {
+          opt1()
+        } else if (value === 9) {
+          break
+        } else if (value < 9) {
+          opt2()
+        }
+        break;
+      default:
+        return
+    }
   }
-  
-  //Function to handle any button that is clicked. This could probably be broken down into
-  //small functions in the future.
+
+  //Function for handling all inputs from ValueButton buttons
   const handleButton = (e) => {
     //Code that runs when next end button is pressed
     if (e.value === "NEXT END"){
-      updateScroll()
       //sort previous end to be displayed in descending order
-      appState[appState.length-1].endValues.sort((a,b) => b-a)
+      sortDisplayText()
       newState = [...appState]
       const lastTotal = newState[newState.length-1].totalScore
-      const nextEnd = {displayText: [], endValues: [], endScore: 0, totalScore: lastTotal ,}
+      const nextEnd = {displayText: [], endValues: [], endScore: 0, totalScore: lastTotal}
       newState.push(nextEnd)
       setAppState(newState)
-      updateScroll()
+      localStorage.setItem('appState', JSON.stringify(newState))
+      
 
       //Code that runs when an arrow value is pressed
     } else if (!isNaN(e.value)) {
       newState = [...appState]
+      updateScroll()
       if (newState[newState.length-1].endValues.length < 6) {
         newState[newState.length-1].endValues.push(parseInt(e.value, 10))
         newState[newState.length-1].displayText.push(e.innerHTML)
-        switch (level) {
-          case 'beginner':
-            if (e.value > 6) {
-              newState[newState.length-1].endScore++
-              newState[newState.length-1].totalScore++
-            } else if (e.value === 6) {
-              break
-            } else if (e.value < 6) {
-              newState[newState.length-1].endScore--
-              newState[newState.length-1].totalScore--
-            }
-            break;
-          case 'intermediate':
-            if (e.value > 7) {
-              newState[newState.length-1].endScore++
-              newState[newState.length-1].totalScore++
-            } else if (e.value === 7) {
-              break
-            } else if (e.value < 7) {
-              newState[newState.length-1].endScore--
-              newState[newState.length-1].totalScore--
-            }
-            break;
-          case 'advanced':
-            if (e.value > 8) {
-              newState[newState.length-1].endScore++
-              newState[newState.length-1].totalScore++
-            } else if (e.value === 8) {
-              break
-            } else if (e.value < 8) {
-              newState[newState.length-1].endScore--
-              newState[newState.length-1].totalScore--
-            }
-            break;
-          case 'expert':
-            if (e.value > 9) {
-              newState[newState.length-1].endScore++
-              newState[newState.length-1].totalScore++
-            } else if (e.value === 9) {
-              break
-            } else if (e.value < 9) {
-              newState[newState.length-1].endScore--
-              newState[newState.length-1].totalScore--
-            }
-            break;
-          default:
-            return
-        }
+        handleScoreChange(level, e.value, incrementScore, decrementScore)
         setAppState(newState)
+        localStorage.setItem('appState', JSON.stringify(newState))
       } else {
         return
       }
@@ -114,66 +246,120 @@ function App() {
       newState = [...appState]
       const deletedValue = newState[newState.length-1].endValues.pop()
       newState[newState.length-1].displayText.pop()
-      switch (level) {
-        case 'beginner':
-          if (deletedValue > 6) {
-            newState[newState.length-1].endScore--
-            newState[newState.length-1].totalScore--
-          } else if (deletedValue === 6) {
-            break
-          } else if (deletedValue < 6) {
-            newState[newState.length-1].endScore++
-            newState[newState.length-1].totalScore++
-          }
-          break;
-        case 'intermediate':
-          if (deletedValue > 7) {
-            newState[newState.length-1].endScore--
-            newState[newState.length-1].totalScore--
-          } else if (deletedValue === 7) {
-            break
-          } else if (deletedValue < 7) {
-            newState[newState.length-1].endScore++
-            newState[newState.length-1].totalScore++
-          }
-          break;
-        case 'advanced':
-          if (deletedValue > 8) {
-            newState[newState.length-1].endScore--
-            newState[newState.length-1].totalScore--
-          } else if (deletedValue === 8) {
-            break
-          } else if (deletedValue < 8) {
-            newState[newState.length-1].endScore++
-            newState[newState.length-1].totalScore++
-          }
-          break;
-        case 'expert':
-          if (deletedValue > 9) {
-            newState[newState.length-1].endScore--
-            newState[newState.length-1].totalScore--
-          } else if (deletedValue === 9) {
-            break
-          } else if (deletedValue < 9) {
-            newState[newState.length-1].endScore++
-            newState[newState.length-1].totalScore++
-          }
-          break;
-        default:
-          return
-      }
+      handleScoreChange(level, deletedValue, decrementScore, incrementScore)
       setAppState(newState)
+      localStorage.setItem('appState', JSON.stringify(newState))
     }
   }
 
+  //Functions for the control panel
+  //----------------------------------------------------------------------------------------
+
+  //Updates the control panel rules section
+  const newRules =  (level) => {
+    const newRules = [...rules]
+    if (level === 'Beginner') {
+        newRules[0].neutral = 6
+
+    } else if (level === 'Intermediate') {
+        newRules[0].neutral = 7
+      
+
+    } else if (level === 'Advanced') {
+        newRules[0].neutral = 8
+
+    } else if (level === 'Elite') {
+        newRules[0].neutral = 9
+
+    }
+    newRules[0].addOne = newRules[0].neutral + 1
+    newRules[0].subOne = newRules[0].neutral - 1
+    setRules(newRules)
+  }
+
+  //Updates the level when a new one is selected
+  const handleLevel = (e) => {
+    let newLevel = ''
+    e.preventDefault()
+    if (appState[appState.length-1].endValues.length === 0) {
+      let options = document.getElementsByName('level')
+      for (var i = 0; i<options.length; i++) {
+        if (options[i].checked) {
+          newLevel = options[i].value
+          setLevel(newLevel)
+          localStorage.setItem('level', newLevel)
+          break
+        } else {
+          continue
+        }
+      }
+    } else {
+      return
+    }
+  }
+
+  //Deletes current end and allows modifications to previous end
+  const lastEnd = () => {
+    if (appState.length > 1) {
+      newState = [...appState]
+      newState.pop()
+      setAppState(newState)
+    } else {
+      return
+    }
+  }
+
+  //Resets appState
+  const resetState = () => {
+    setAppState(
+      [
+        {
+          displayText: [],
+          endValues: [],
+          endScore: 0,
+          totalScore: 0
+        }
+      ]);
+    setCompleted(false);
+    setGoal(0);
+    setLevel('Advanced');
+    document.getElementById('goal-input').value = '';
+    localStorage.clear();
+  }
+  
+  const handleGoal = () => {
+    const goalInput = document.getElementById('goal-input').value
+    localStorage.setItem('goal', goalInput)
+    setGoal(Number(goalInput))
+
+  }
+
+
+
   
   return (
-    <div className="App">
-      <div className = "scorecard">
-        <ScoreDisplay appState = {appState} />
-        <ValueButtons handleButton = {handleButton} />
+    <>
+      <div className = "popup">
+        <Popup appState = {appState} goal = {goal} />
       </div>
-    </div>
+      <div className="App">
+        <div className = "scorecard">
+          <ScoreDisplay appState = {appState} />
+          <ValueButtons handleButton = {handleButton} />
+        </div>
+        <div className = "control-panel">
+          <h3 className = "control-title">Control Panel</h3>
+          <SetGoal handleGoal = {handleGoal} />
+          <LevelRules level = {level} rules = {rules} goal = {goal} />
+          <SelectLevel handleLevel = {handleLevel} />
+
+          <div className = "control-buttons">
+            <button className = "level-submit blue" id = 'last' onClick = {lastEnd} >Last End</button>
+            <button className = "level-submit blue mb-5" id = 'reset' onClick = {resetState} >Reset</button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -181,72 +367,9 @@ export default App;
 
 
 /*
-Gold game scoring app
+Things to add:
 
-Key functionality:
-  -choose level and format
-    -beginner, intermediate, advanced and expert levels
-    -choose 3, 6, or 9 arrow ends
-
-  -input arrow values and have them displayed in 'scorecard' section, along with
-  end points and total points
-    -app must only allow user to input the correct number of arrows each end
-    -backspace button to modify arrow values before submitting end
-    -next end button to move to the next line of scoring
-    -button for each score value: m-10.
-    -reset button to start over completely
-
-  -scoring levels
-    -beginner mode: 
-      -7 ring and in is 1 point, 6 ring is neutral, 5 ring and out is -1
-    -intermediate mode
-      -8 ring and in is 1 point, 7 ring is neutral, 8 ring and out is -1
-    -advanced mode
-      -9 ring and in is 1 point, 8 is neutral, 7 and out -1
-    -expert mode
-      -10 ring is one point, 9 is neutral, 8 ring and out is -1
-
-
-App Design
-
-  Components
-    App container
-      -parent container for entire app
-
-    Scoring interface
-      -contains the scoring buttons and scorecard
-      Arrow values
-        -the group of buttons including m-X, backspace, next end, and reset
-      Scorecard
-        -lists the arrow values for each end, their corresponding gold game score,
-         and the total score for the round
-      
-    Settings interface
-      -sidebar to the scoring interface
-
-      Select level component
-        -radio buttons to choose between beginner, intermediate, advanced, and expert
-
-      Choose format component
-        -radio buttons for 3, 6, or 9 arrow ends
-
-      Explanation section:
-        -explains the rules for the level they have selected
-
-
-Pseuocode for components
-
-  App container
-    Styles:
-      -center the app in the screen
-      -set the display to flex
-      -set flex direction to row
-    Global state
-      -end arrow values and the resulting gold game score are stored in global state
-      -each end is a new object in the state array
-    Logic
-      -
-
+-grey out buttons when they are not a valid action
 
 
 */

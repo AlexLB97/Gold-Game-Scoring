@@ -5,11 +5,23 @@
 }
 
 .App {
-  display: grid;
-  align-content: center;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: gray;
+  background: rgb(134, 221, 255);
+}
+
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255, 0.5);
+  height: 640px;
+  width: 300px;
+  margin-left: 20px;
 }
 
 .scorecard {
@@ -97,6 +109,7 @@ button:active {
   grid-template-columns: repeat(6, 1fr);
   align-items: center;
   min-height: 30px;
+  padding-left: 5px;
 }
 
 .column-labels {
@@ -157,4 +170,125 @@ button:active {
   justify-content: center;
 }
 
+.form-container {
+  width: 100%;
+  border: 1px solid black;
+  padding: 5px 0;
 
+}
+
+.form-label {
+  margin-left: 5px;
+  font-weight: bold;
+} 
+
+.level-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-option {
+  padding: 5px;
+}
+
+.form-option > label {
+  padding-left: 5px;
+}
+
+.level-submit {
+  display: block;
+  width: 95%;
+  margin: 5px auto 0 auto;
+  height: 40px;
+  font-size: 14px;
+}
+
+.rules-container > p {
+  margin: 5px 2px;
+}
+
+
+.rules-title {
+  text-align: center;
+  width: 100%;
+  background: yellow;
+  padding: 5px 0;
+  margin-bottom: 10px;
+}
+
+.control-title {
+  padding-top: 10px;
+}
+
+.control-buttons {
+  width: 100%;
+}
+
+.mb-5 {
+  margin-bottom: 5px;
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+button:disabled:hover {
+  cursor: default;
+}
+
+input:hover, label:hover {
+  cursor: pointer;
+}
+
+#goal-input {
+  height: 30px;
+  width: 50px;
+  font-size: 16px;
+  text-align: center;
+}
+
+.goal-button {
+  font-size: 14px;
+  padding: 6px;
+}
+
+.goal-container {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.goal-container > label {
+  font-weight: bold;
+}
+
+
+#popup {
+  position: fixed;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255,255,255, 0.75);
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+}
+
+.popup-box {
+ background:rgb(220,220,220);
+ width: 400px;
+ height: 180px;
+ border: 1px solid black;
+}
+
+.results-header {
+  text-align: center;
+  padding: 5px;
+  background: 
+}
+
+.popup-box > p {
+  padding: 10px;
+}
